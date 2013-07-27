@@ -1,6 +1,6 @@
 #!/bin/bash
 #STLVNUB
-verS="CloverTool V0.9"
+verS="CloverTool V0.a"
 workingDirectory="`dirname \"$0\"`"
 theBS="$workingDirectory"/com.apple.recovery.boot/BaseSystem.dmg
 theTool="$workingDirectory"/TOOLS/dmtest
@@ -25,7 +25,7 @@ case "${theSystem}" in
     [14-20]) rootSystem="Unknown" ;;
 esac
 [ "$rootSystem" == unsupported ] && echo "For Lion-Mavericks Only!!" && exit 1
-
+b=1
 function makeRecovery(){
 if [ ! -f "$workingDirectory"/com.apple.recovery.boot/BaseSystem.dmg ]; then
 	if [ -e /Applications/"Install OS X Mountain Lion.app" ]; then
@@ -44,12 +44,16 @@ if [ ! -f "$workingDirectory"/com.apple.recovery.boot/BaseSystem.dmg ]; then
 		cp /Volumes/"Mac OS X Install ESD"/BaseSystem.dmg "$workingDirectory"/com.apple.recovery.boot/
 		cp /Volumes/"Mac OS X Install ESD"/kernelcache "$workingDirectory"/com.apple.recovery.boot/
 		hdiutil detach /Volumes/"Mac OS X Install ESD"
-		echo "Step 1: Done…"
+		echo "Step $b: Done…"
+		let b++
 	else
 		echo "Please download 'Install OS X $rootSystem.app' from the App store"
-	fi	
+	fi
+else
+	echo "Local Recovery Folder Found"
+	echo "Will use 'com.apple.recovery.boot/BaseSystem.dmg' as the source"
 fi
-echo "Step 2: BaseSystem.dmg found, attaching with shadow..."
+echo "Step $b: BaseSystem.dmg found, attaching with shadow..."
 hdiutil attach -nobrowse -owners on "$theBS" -shadow
 [ ! -d /Volumes/"Mac OS X Base System"/ToolBox/ ] && mkdir -p /Volumes/"Mac OS X Base System"/ToolBox/
 if [ $1 == Modified ]; then
@@ -70,6 +74,8 @@ hdiutil convert -format UDZO -o "$theOutput" "$theBS" -shadow
 echo "asr checksumming…"
 asr -imagescan "$theOutput"
 echo "fixing..."
+let b++
+echo "Step $b: Make Recovery Partiion"
 sudo $theTool ensureRecoveryPartition / "$theOutput" 0 0 "$workingDirectory"/com.apple.recovery.boot/BaseSystem.chunklist
 echo "done"
 tput bel
