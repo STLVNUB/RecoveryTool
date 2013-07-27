@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Buttons</key>
+	<array>
+		<dict>
+			<key>BundlePath</key>
+			<string>/Applications/Utilities/Disk Utility.app</string>
+			<key>DescriptionKey</key>
+			<string>Repair or erase a volume.</string>
+			<key>Path</key>
+			<string>/Applications/Utilities/Disk Utility.app/Contents/MacOS/Disk Utility</string>
+			<key>TitleKey</key>
+			<string>Disk Utility</string>
+		</dict>
+		<dict>
+			<key>Arguments</key>
+			<array>
+				<string>-SystemRestoreMode</string>
+			</array>
+			<key>DescriptionKey</key>
+			<string>You have a backup of your system that you want to restore.</string>
+			<key>IconName</key>
+			<string>TimeMachineIcon.tiff</string>
+			<key>Path</key>
+			<string>/System/Installation/CDIS/OS X Installer.app/Contents/MacOS/OS X Installer</string>
+			<key>TitleKey</key>
+			<string>Restore From Time Machine Backup</string>
+		</dict>
+		<dict>
+			<key>BundlePath</key>
+			<string>/Applications/Safari.app</string>
+			<key>DescriptionKey</key>
+			<string>Browse the web for help or other information.</string>
+			<key>Path</key>
+			<string>/Applications/Safari.app/Contents/MacOS/Safari</string>
+			<key>TitleKey</key>
+			<string>Browse The Web</string>
+		</dict>
+		<dict>
+			<key>Arguments</key>
+			<array>
+				<string>-RunInOSIEnv</string>
+			</array>
+			<key>BundlePath</key>
+			<string>/Install OS X Mountain Lion.app</string>
+			<key>DescriptionKey</key>
+			<string>Reinstall a new copy of OS X.</string>
+			<key>Path</key>
+			<string>/Install OS X Mountain Lion.app/Contents/MacOS/Install OS X Mountain Lion</string>
+			<key>TitleKey</key>
+			<string>Reinstall OS X</string>
+		</dict>
+		<dict>
+			<key>BundlePath</key>
+			<string>/Applications/MacIASL.app</string>
+			<key>DescriptionKey</key>
+			<string>ACPI ASL Tool</string>
+			<key>Path</key>
+			<string>/Applications/MacIASL.app/Contents/MacOS/MacIASL</string>
+			<key>TitleKey</key>
+			<string>MacIASL</string>
+		</dict>
+		<dict>
+			<key>BundlePath</key>
+			<string>/Applications/DPCIManager.app</string>
+			<key>DescriptionKey</key>
+			<string>DPCI Tools</string>
+			<key>Path</key>
+			<string>/Applications/DPCIManager.app/Contents/MacOS/DPCIManager</string>
+			<key>TitleKey</key>
+			<string>DPCIManager</string>
+		</dict>
+		<dict>
+			<key>BundlePath</key>
+			<string>/Applications/HexFiend.app</string>
+			<key>DescriptionKey</key>
+			<string>Hex Editor</string>
+			<key>Path</key>
+			<string>/Applications/HexFiend.app/Contents/MacOS/HexFiend</string>
+			<key>TitleKey</key>
+			<string>HexFiend</string>
+		</dict>
+	</array>
+	<key>Menu</key>
+	<array>
+		<dict>
+			<key>BundlePath</key>
+			<string>/Applications/Utilities/Firmware Password Utility.app</string>
+			<key>Path</key>
+			<string>/Applications/Utilities/Firmware Password Utility.app/Contents/MacOS/Firmware Password Utility</string>
+			<key>TitleKey</key>
+			<string>Firmware Password Utility</string>
+		</dict>
+		<dict>
+			<key>BundlePath</key>
+			<string>/Applications/Utilities/Network Utility.app</string>
+			<key>Path</key>
+			<string>/Applications/Utilities/Network Utility.app/Contents/MacOS/Network Utility</string>
+			<key>TitleKey</key>
+			<string>Network Utility</string>
+		</dict>
+		<dict>
+			<key>BundlePath</key>
+			<string>/Applications/Utilities/RAID Utility.app</string>
+			<key>Path</key>
+			<string>/Applications/Utilities/RAID Utility.app/Contents/MacOS/RAID Utility</string>
+			<key>Show If</key>
+			<dict>
+				<key>Selector</key>
+				<string>shouldShowRAIDUtility</string>
+			</dict>
+			<key>TitleKey</key>
+			<string>RAID Utility</string>
+		</dict>
+		<dict>
+			<key>BundlePath</key>
+			<string>/Applications/Utilities/Terminal.app</string>
+			<key>Path</key>
+			<string>/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal</string>
+			<key>TitleKey</key>
+			<string>Terminal</string>
+		</dict>
+	</array>
+</dict>
+</plist>
