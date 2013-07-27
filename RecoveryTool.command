@@ -1,6 +1,6 @@
 #!/bin/bash
 #STLVNUB
-verS="CloverTool V0.8"
+verS="CloverTool V0.9"
 workingDirectory="`dirname \"$0\"`"
 theBS="$workingDirectory"/com.apple.recovery.boot/BaseSystem.dmg
 theTool="$workingDirectory"/TOOLS/dmtest
@@ -25,6 +25,7 @@ case "${theSystem}" in
     [14-20]) rootSystem="Unknown" ;;
 esac
 [ "$rootSystem" == unsupported ] && echo "For Lion-Mavericks Only!!" && exit 1
+
 function makeRecovery(){
 if [ ! -f "$workingDirectory"/com.apple.recovery.boot/BaseSystem.dmg ]; then
 	if [ -e /Applications/"Install OS X Mountain Lion.app" ]; then
@@ -51,7 +52,7 @@ fi
 echo "Step 2: BaseSystem.dmg found, attaching with shadow..."
 hdiutil attach -nobrowse -owners on "$theBS" -shadow
 [ ! -d /Volumes/"Mac OS X Base System"/ToolBox/ ] && mkdir -p /Volumes/"Mac OS X Base System"/ToolBox/
-if [ $1 == 2 ]; then # 1 = vanilla, 2 = modified
+if [ $1 == Modified ]; then
 	echo "Copy some apps and stuff and chown them"
 	sudo cp -R "${appDIR}"/ /Volumes/"Mac OS X Base System"/Applications/
 	sudo chown -R root:wheel /Volumes/"Mac OS X Base System"/Applications/
@@ -89,17 +90,6 @@ recoverPart=
 DevID=`diskutil list | grep Recovery | cut -c 75`
 # set the variable which contains the FULL drive ID of the recovery partition
 recoveryPart="$DevRoot$DevID"
-if [ "$recoveryPart" != "" ]; then
-	echo "The Following Recovery Partition(s) has been found:"
-	echo $recoveryPart
-	echo
-	CHOICE2="Vanilla Modified Delete Exit"
-	choice3="Removes recovery partition\nExit\n"
-else
-	echo "No Recovery Found…"
-	CHOICE2="Vanilla Modified Exit"
-	choice3="Exit\n"
-fi		
 }
 
 function deleteRecovery(){
@@ -156,7 +146,7 @@ sleep 2
 
 function Vanilla(){
 	checkDisks
-	makeRecovery $a
+	makeRecovery $a # pass argument, Vanilla OR Modified
 }
 
 function Modified(){
@@ -175,12 +165,22 @@ function Exit(){
 function menu(){
 	findRecovery
 	echo -e "\n \n"
-	echo "Running $verS on $rootSystem"
-	echo -e "This script does one of the following:\n"
-	echo "Installs a 'vanilla' recovery partition, with FakeSMC"
-	echo "Installs a 'modified' recovery partition, with FakeSMC and Tools"
+	if [ "$recoveryPart" != "" ]; then
+		mess="The Following Recovery Partition has been found: $recoveryPart"
+		CHOICE2="Vanilla Modified Delete Exit"
+		choice3="* Removes recovery partition                                       *"
+	else
+		mess="No Recovery Found…"
+		CHOICE2="Vanilla Modified Exit"
+		choice3=""
+	fi	
+	echo -e "Running '$verS' on '$rootSystem' with disk '$DEVBooted'"
+	echo "$mess"
+	echo -e "*************** This script does one of the following:**************"
+	echo "* Installs a 'vanilla' recovery partition, with FakeSMC            *"
+	echo "* Installs a 'modified' recovery partition, with FakeSMC and Tools *"
 	echo -e "$choice3"
-	echo "Please Select from the following list"
+	echo "*************** Please Select from the following list **************"
 	echo; printf '\a'
 	PS3='Enter your choice as a numeric value: '
 	select a in $CHOICE2
