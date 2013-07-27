@@ -1,5 +1,6 @@
 #!/bin/bash
-#V0.6 STLVNUB
+#STLVNUB
+verS="CloverTool V0.6"
 workingDirectory="`dirname \"$0\"`"
 theBS="$workingDirectory"/com.apple.recovery.boot/BaseSystem.dmg
 theTool="$workingDirectory"/TOOLS/dmtest
@@ -145,7 +146,7 @@ sleep 2
 
 function menu(){
 	echo -e "\n \n"
-	echo "Running on $rootSystem"
+	echo "Running $verS on $rootSystem"
 	echo -e "This script does one of the following:"
 	echo "  1) Installs a 'vanilla' recovery partition, with FakeSMC"
 	echo "  2) Installs a 'modified' recovery partition, with FakeSMC and Tools"
