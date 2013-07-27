@@ -1,5 +1,5 @@
 #!/bin/bash
-#V0.5 STLVNUB
+#V0.6 STLVNUB
 workingDirectory="`dirname \"$0\"`"
 theBS="$workingDirectory"/com.apple.recovery.boot/BaseSystem.dmg
 theTool="$workingDirectory"/TOOLS/dmtest
@@ -75,14 +75,16 @@ rm -rf "$theBS".shadow
 rm -rf "$workingDirectory"/BaseSystem.dmg
 }
 
+getBootedHD(){
+DEVBooted=`diskutil info / | grep 'Part of Whole:'` # get disk theat we booted from
+DEVBooted="${DEVBooted:29:5}"
+}
+
 function deleteRecovery(){
-	#diskutil eraseVolume HFS+ Blank disk0s3
-	#diskutil mergePartitions HFS+ MountainLion disk0s2 disk0s3
-	DevRoot=`diskutil list | grep Recovery | cut -c 69-74`
+DevRoot=`diskutil list | grep Recovery | cut -c 69-74`
 
 # isolate the last digit of that partition ID
 DevID=`diskutil list | grep Recovery | cut -c 75`
-
 # set the variable which contains the FULL drive ID of the recovery partition
 recoveryPart="$DevRoot$DevID"
 echo "The recovery partition we're erasing is: $recoveryPart"
@@ -128,7 +130,7 @@ else
 	echo -e "\n \n"
 	echo "Preparing to check your hard drive for errors."
 fi
-diskutil verifyDisk disk0
+diskutil verifyDisk $DEVBooted
 RetVal=`echo $?`
 if [ $RetVal == 1 ]; then
     echo -e "Macintosh HD needs to be repaired.\nThe easiest way to do this is to boot off another drive or boot disk running Lion or Mountain Lion."
@@ -162,4 +164,5 @@ function menu(){
   	esac
   	menu
 }
+getBootedHD
 menu
