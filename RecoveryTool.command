@@ -1,6 +1,6 @@
 #!/bin/bash
 #STLVNUB
-verS="CloverTool V0.6"
+verS="CloverTool V0.8"
 workingDirectory="`dirname \"$0\"`"
 theBS="$workingDirectory"/com.apple.recovery.boot/BaseSystem.dmg
 theTool="$workingDirectory"/TOOLS/dmtest
@@ -81,13 +81,28 @@ DEVBooted=`diskutil info / | grep 'Part of Whole:'` # get disk theat we booted f
 DEVBooted="${DEVBooted:29:5}"
 }
 
-function deleteRecovery(){
+function findRecovery(){
 DevRoot=`diskutil list | grep Recovery | cut -c 69-74`
 
 # isolate the last digit of that partition ID
+recoverPart=
 DevID=`diskutil list | grep Recovery | cut -c 75`
 # set the variable which contains the FULL drive ID of the recovery partition
 recoveryPart="$DevRoot$DevID"
+if [ "$recoveryPart" != "" ]; then
+	echo "The Following Recovery Partition(s) has been found:"
+	echo $recoveryPart
+	echo
+	CHOICE2="Vanilla Modified Delete Exit"
+	choice3="Removes recovery partition\nExit\n"
+else
+	echo "No Recovery Found…"
+	CHOICE2="Vanilla Modified Exit"
+	choice3="Exit\n"
+fi		
+}
+
+function deleteRecovery(){
 echo "The recovery partition we're erasing is: $recoveryPart"
 
 # we know the main partition is one digit LESS on the chain
@@ -106,11 +121,6 @@ if [ $choice != c ]; then
 	exit 1
 fi	
 
-
-echo "The Following Recovery Partition(s) has been found:"
-echo $recoveryPart
-echo ""
-
 diskutil eraseVolume HFS+ Blank $recoveryPart
 echo ""
 
@@ -126,7 +136,7 @@ disks=(`diskutil list | grep "GUID_partition_scheme" | awk '{print $5}'`)
 
 if [ "${#disks[@]}" != 1 ]; then
 	echo -e "\n \n"
-	echo -e "You have multiple disks attached to your Mac.\nI will assume that disk0 is your Macintosh HD boot volume."
+	echo -e "You have multiple disks attached to your Mac.\nI will assume that $DEVBooted is your Macintosh HD boot volume."
 else
 	echo -e "\n \n"
 	echo "Preparing to check your hard drive for errors."
@@ -144,26 +154,44 @@ fi
 sleep 2
 }
 
+function Vanilla(){
+	checkDisks
+	makeRecovery $a
+}
+
+function Modified(){
+	Vanilla
+}
+
+function Delete(){
+	deleteRecovery
+}
+
+function Exit(){
+	echo "Bye"
+	exit 1
+}		
+
 function menu(){
+	findRecovery
 	echo -e "\n \n"
 	echo "Running $verS on $rootSystem"
-	echo -e "This script does one of the following:"
-	echo "  1) Installs a 'vanilla' recovery partition, with FakeSMC"
-	echo "  2) Installs a 'modified' recovery partition, with FakeSMC and Tools"
-	echo "  3) Removes recovery partition"
-	echo "  4) Exit"  
-	read -p "Please select '1 - 4'? " choice
-
-	case "$choice" in
-  	1|2 ) echo "Choice 1: Install"
-  	sleep 1
-  	checkDisks
-  	makeRecovery $choice;;
-  	3 ) echo "Choice 2: Removing"
-  	deleteRecovery;;
-  	4 ) echo "Bye";exit 1
-  	esac
-  	menu
+	echo -e "This script does one of the following:\n"
+	echo "Installs a 'vanilla' recovery partition, with FakeSMC"
+	echo "Installs a 'modified' recovery partition, with FakeSMC and Tools"
+	echo -e "$choice3"
+	echo "Please Select from the following list"
+	echo; printf '\a'
+	PS3='Enter your choice as a numeric value: '
+	select a in $CHOICE2
+	do
+	case "$a"  in
+	"") echo "You must select one of the above!";echo "Hit Enter to see menu again!" ;;
+	"$a" ) break ;;
+	esac
+	done
+	"$a"
+	menu
 }
 getBootedHD
 menu
