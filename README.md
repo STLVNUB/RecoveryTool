@@ -9,3 +9,4 @@ Create Customized with FakeSMC with apps/tools
 
 Delete Recovery
 
+Requires the appropriate OSX Install app in /Applications
