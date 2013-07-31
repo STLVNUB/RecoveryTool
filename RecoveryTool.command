@@ -1,6 +1,6 @@
 #!/bin/bash
 #STLVNUB
-verS="CloverTool V0.a"
+verS="CloverTool V0.b"
 workingDirectory="`dirname \"$0\"`"
 theBS="$workingDirectory"/com.apple.recovery.boot/BaseSystem.dmg
 theTool="$workingDirectory"/TOOLS/dmtest
@@ -8,94 +8,114 @@ appDIR="$workingDirectory"/Apps
 kextDIR="$workingDirectory"/Kexts
 installDIR="$workingDirectory"/Installation
 toolBoxDIR="$workingDirectory"/ToolBox
+preheatDIR="$workingDirectory"/Files/LML
 # files needed to build com.apple.recovery.boot, rest can be copied from OS X
 carbDIR="$workingDirectory"/carb 
 #files that need to be copied from OS X, boot.efi PlatformSupport.plist SystemVersion.plist
 theprogs="boot.efi PlatformSupport.plist SystemVersion.plist"
 #files that need to be grabbed from Install OS X Mountain Lion.app, kernelcache BaseSystem.dmg
 theOutput="$workingDirectory"/BaseSystem.dmg
-
 theSystem=$(uname -r)
 theSystem="${theSystem:0:2}"
+theBaseSystem="Mac OS X Base System"
+theESD="Mac OS X Install ESD"
 case "${theSystem}" in
     [0-10]) rootSystem="unsupported" ;;
     11) export rootSystem="Lion" ;;
     12)	export rootSystem="Mountain Lion" ;;
-    13)	export rootSystem="Mavericks" ;;
+    13)	export rootSystem="Mavericks"; theBaseSystem="OS X Base System"; theESD="OS X Install ESD"; preheatDIR="$workingDirectory"/Files/Mvrks;;
     [14-20]) rootSystem="Unknown" ;;
 esac
 [ "$rootSystem" == unsupported ] && echo "For Lion-Mavericks Only!!" && exit 1
 b=1
 function makeRecovery(){
 if [ ! -f "$workingDirectory"/com.apple.recovery.boot/BaseSystem.dmg ]; then
-	if [ -e /Applications/"Install OS X Mountain Lion.app" ]; then
+	if [ -e /Applications/"Install OS X $rootSystem.app" ]; then
 		echo "Step 1: Making com.apple.recovery.boot Folder"
 		[ ! -d "$workingDirectory"/com.apple.recovery.boot ] && mkdir "$workingDirectory"/com.apple.recovery.boot
 		echo "Copy some files"
 		cp -R "${carbDIR}"/ "$workingDirectory"/com.apple.recovery.boot
+		echo "open Install OS X $rootSystem.app/Contents/SharedSupport/InstallESD.dmg"
 		open /Applications/"Install OS X $rootSystem".app/Contents/SharedSupport/InstallESD.dmg
-		while [ ! -d /Volumes/"Mac OS X Install ESD"/System/Library/CoreServices/ ]; do
+		while [ ! -d /Volumes/"$theESD"/System/Library/CoreServices/ ]; do
 			wait
 		done
 		for prog in $theprogs; do
-				cp /Volumes/"Mac OS X Install ESD"/System/Library/CoreServices/"$prog" "$workingDirectory"/com.apple.recovery.boot/
+			if [ -f $prog ]; then
+				echo "cp $prog"
+				cp /Volumes/"$theESD"/System/Library/CoreServices/"$prog" "$workingDirectory"/com.apple.recovery.boot/
+			fi	
 		done
-		echo "Grabbing BaseSystem.dmg and kernelcache"
-		cp /Volumes/"Mac OS X Install ESD"/BaseSystem.dmg "$workingDirectory"/com.apple.recovery.boot/
-		cp /Volumes/"Mac OS X Install ESD"/kernelcache "$workingDirectory"/com.apple.recovery.boot/
-		hdiutil detach /Volumes/"Mac OS X Install ESD"
-		echo "Step $b: Done…"
-		let b++
+		echo "Grab BaseSystem.dmg, boot.efi and kernelcache"
+		cp /Volumes/"$theESD"/BaseSystem.dmg "$workingDirectory"/com.apple.recovery.boot/
+		cp /Volumes/"$theESD"/kernelcache "$workingDirectory"/com.apple.recovery.boot/
+		cp /Volumes/"$theESD"/boot.efi "$workingDirectory"/com.apple.recovery.boot/
+		echo "detach..."
+		hdiutil detach /Volumes/"$theESD"
+		echo "Step $b: Done…"; let b++
 	else
-		echo "Please download 'Install OS X $rootSystem.app' from the App store"
+		echo "Please download '$theESD $rootSystem.app' from the App store"
+		exit 1
 	fi
 else
 	echo "Local Recovery Folder Found"
 	echo "Will use 'com.apple.recovery.boot/BaseSystem.dmg' as the source"
 fi
-echo "Step $b: BaseSystem.dmg found, attaching with shadow..."
+echo "Step $b: BaseSystem.dmg found, attaching with shadow…"; let b++
 hdiutil attach -nobrowse -owners on "$theBS" -shadow
-[ ! -d /Volumes/"Mac OS X Base System"/ToolBox/ ] && mkdir -p /Volumes/"Mac OS X Base System"/ToolBox/
+[ ! -d /Volumes/"$theBaseSystem"/ToolBox/ ] && mkdir -p /Volumes/"$theBaseSystem"/ToolBox/
 if [ $1 == Modified ]; then
-	echo "Copy some apps and stuff and chown them"
-	sudo cp -R "${appDIR}"/ /Volumes/"Mac OS X Base System"/Applications/
-	sudo chown -R root:wheel /Volumes/"Mac OS X Base System"/Applications/
-	sudo cp -R "${installDIR}"/ /Volumes/"Mac OS X Base System"/System/Installation/CDIS/
-	sudo chown -R root:wheel /Volumes/"Mac OS X Base System"/System/Installation/CDIS/
-	sudo cp -R "${toolBoxDIR}" /Volumes/"Mac OS X Base System"/
-fi	
-echo "Copy FakeSMC and chown it"
-sudo cp -R "${kextDIR}" /Volumes/"Mac OS X Base System"/ToolBox/
-sudo chown -R root:wheel /Volumes/"Mac OS X Base System"/Toolbox/
+	echo "Step $b: Copy some apps and stuff and chown them..."; let b++
+	sudo cp -R "${appDIR}"/ /Volumes/"$theBaseSystem"/Applications/
+	sudo chown -R root:wheel /Volumes/"$theBaseSystem"/Applications/
+	sudo cp -R "${toolBoxDIR}" /Volumes/"$theBaseSystem"/
+	sudo cp -R "${installDIR}"/ /Volumes/"$theBaseSystem"/System/Installation/CDIS/
+fi
+echo "Step $b: Copy preheat.sh, chmod and chown it..."; let b++
+sudo cp -R "${preheatDIR}"/preheat.sh /Volumes/"$theBaseSystem"/System/Installation/CDIS/preheat.sh
+sudo chmod +x /Volumes/"$theBaseSystem"/System/Installation/CDIS/preheat.sh
+sudo chown -R root:wheel /Volumes/"$theBaseSystem"/System/Installation/CDIS/
+echo "Step $b: Copy Kexts,chown them, and detach..."; let b++
+sudo cp -R "${kextDIR}" /Volumes/"$theBaseSystem"/ToolBox/
+sudo chown -R root:wheel /Volumes/"$theBaseSystem"/Toolbox/
 echo "Detaching…"
-hdiutil detach /Volumes/"Mac OS X Base System"
-echo "Converting back to readonly"
+hdiutil detach /Volumes/"$theBaseSystem"
+echo "Step $b: Converting back to readonly..."; let b++
 hdiutil convert -format UDZO -o "$theOutput" "$theBS" -shadow
-echo "asr checksumming…"
+echo "Step $b: asr checksumming…"; let b++
 asr -imagescan "$theOutput"
-echo "fixing..."
-let b++
-echo "Step $b: Make Recovery Partiion"
+echo "Step $b: Make Recovery Partiion..."; let b++
 sudo $theTool ensureRecoveryPartition / "$theOutput" 0 0 "$workingDirectory"/com.apple.recovery.boot/BaseSystem.chunklist
-echo "done"
-tput bel
+echo "Step $b: remove temp files..."
 rm -rf "$theBS".shadow
 rm -rf "$workingDirectory"/BaseSystem.dmg
+echo "done"
+tput bel
 }
 
 getBootedHD(){
-DEVBooted=`diskutil info / | grep 'Part of Whole:'` # get disk theat we booted from
+DEVBooted=`diskutil info / | grep 'Device Identifier:'` # get disk that we booted from
+DEVBoot="${DEVBooted:29:8}"
+DEVSlice="${DEVBoot:6:1}"
 DEVBooted="${DEVBooted:29:5}"
+let DEVSlice++
+DEVREC="${DEVBooted}s$DEVSlice"
+DEVBootedName=`diskutil info / | grep 'Volume Name:'`
+DEVBootedName="${DEVBootedName:15:40}"
 }
 
 function findRecovery(){
-DevRoot=`diskutil list | grep Recovery | cut -c 69-74`
-
-# isolate the last digit of that partition ID
-recoverPart=
-DevID=`diskutil list | grep Recovery | cut -c 75`
-# set the variable which contains the FULL drive ID of the recovery partition
-recoveryPart="$DevRoot$DevID"
+recoveryPart=
+DevRecs=`diskutil list | grep Recovery | cut -c 69-75`
+for therec in $DevRecs; do
+	if [ "${DEVREC}" == "$therec" ]; then
+		DevRoot="${DEVBooted}s" #`diskutil list | grep Recovery | cut -c 69-74`# isolate the last digit of that partition ID
+		DevID="${DEVSlice}" #`diskutil list | grep Recovery | cut -c 75`
+		# set the variable which contains the FULL drive ID of the recovery partition
+		recoveryPart="$DevRoot$DevID"
+		return
+	fi
+done
 }
 
 function deleteRecovery(){
@@ -109,7 +129,7 @@ mergePart="$DevRoot$mergeID"
 echo "The partition into which we're merging is: $mergePart"
 
 # find the NAME of the merge partition by setting variable
-mergeName=`diskutil list | grep $mergePart | cut -c 34-57`
+mergeName=$DEVBootedName # `diskutil list | grep $mergePart | cut -c 34-57`
 echo "The name of the merge partition is: $mergeName"
 choice=
 read -p "Press 'c' key to continue, any other to exit" choice
@@ -140,7 +160,7 @@ fi
 diskutil verifyDisk $DEVBooted
 RetVal=`echo $?`
 if [ $RetVal == 1 ]; then
-    echo -e "Macintosh HD needs to be repaired.\nThe easiest way to do this is to boot off another drive or boot disk running Lion or Mountain Lion."
+    echo -e "$DEVBootedName needs to be repaired.\nThe easiest way to do this is to boot off another drive or boot disk running Lion or Mountain Lion."
     exit 1
 
 else
@@ -180,7 +200,7 @@ function menu(){
 		CHOICE2="Vanilla Modified Exit"
 		choice3=""
 	fi	
-	echo -e "Running '$verS' on '$rootSystem' with disk '$DEVBooted'"
+	echo -e "Running '$verS' on '$rootSystem' with disk '${DEVBooted}'"
 	echo "$mess"
 	echo -e "*************** This script does one of the following:**************"
 	echo "* Installs a 'vanilla' recovery partition, with FakeSMC            *"
@@ -197,6 +217,7 @@ function menu(){
 	esac
 	done
 	"$a"
+	wait
 	menu
 }
 getBootedHD
