@@ -1,6 +1,6 @@
 #!/bin/bash
 #STLVNUB
-verS="CloverTool V0.b"
+verS="RecoveryTool V0.c"
 workingDirectory="`dirname \"$0\"`"
 theBS="$workingDirectory"/com.apple.recovery.boot/BaseSystem.dmg
 theTool="$workingDirectory"/TOOLS/dmtest
