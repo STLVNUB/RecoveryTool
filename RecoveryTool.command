@@ -28,11 +28,13 @@ case "${theSystem}" in
 esac
 theOutputESD="${workingDirectory}"/Create/Install_${rootSystem}_ESD.dmg
 theInputESD="/Applications/Install OS X ${rootSystem}.app/Contents/SharedSupport/InstallESD.dmg"
+[ ! -e /Applications/"Install OS X ${rootSystem}.app" ] && echo "Please download '${theESD} ${rootSystem}.app' from the App store" && exit 1
 [ "${rootSystem}" == unsupported ] && echo "For Lion-Mavericks Only!!" && exit 1
+[ ! -d "${workingDirectory}"/Create ] && mkdir -p "${workingDirectory}"/Create
 b=1
 function makeRecovery(){
 if [ ! -f "${theOutput}"  ]; then
-	if [ -e /Applications/"Install OS X ${rootSystem}.app" ]; then
+	if [ ! -f "${theBS}" ]; then
 		echo "Step 1: Making com.apple.recovery.boot Local Folder"
 		[ ! -d "${workingDirectory}"/com.apple.recovery.boot ] && mkdir "${workingDirectory}"/com.apple.recovery.boot
 		echo "Copy some files"
@@ -58,18 +60,15 @@ if [ ! -f "${theOutput}"  ]; then
 		wait
 		echo "Step $b: Done…"; let b++
 	else
-		echo "Please download '${theESD} ${rootSystem}.app' from the App store"
-		exit 1
+		echo "Local Recovery Folder Found"
+		echo "Will use "
+		echo "${theOutput}"
+		echo "as the source"
+		if [ $1 == Create ]; then
+			return
+		fi	
 	fi
-else
-	echo "Local Recovery Folder Found"
-	echo "Will use "
-	echo "${theOutput}"
-	echo "as the source"
-	if [ $1 == Create ]; then
-		return
-	fi	
-fi
+fi	
 echo "Step $b: BaseSystem.dmg found, attaching with shadow…"; let b++
 hdiutil attach -nobrowse -owners on "${theBS}" -shadow
 wait
@@ -106,12 +105,11 @@ asr -imagescan "${theOutput}"
 if [ $1 != Create ]; then # run for Modified OR Vanilla, NOT Create
 	echo "Step $b: Make Recovery Partiion..."; let b++
 	sudo ${theTool} ensureRecoveryPartition / "${theOutput}" 0 0 "${workingDirectory}"/com.apple.recovery.boot/BaseSystem.chunklist
-elif [ $1 == Create ]; then
-	return
-else
 	echo "Step $b: remove temp files..."
 	rm -rf "${theBS}".shadow
 	rm -rf "${theOutput}"
+else
+	return
 fi	
 echo "done"
 tput bel
