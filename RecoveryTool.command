@@ -102,11 +102,12 @@ echo "Step $b: Converting back to readonly..."; let b++
 hdiutil convert -format UDZO -o "${theOutput}" "${theBS}" -shadow
 echo "Step $b: asr checksumming…"; let b++
 asr -imagescan "${theOutput}"
+echo "Step $b: remove shadow file..."; let b++
+rm -rf "${theBS}".shadow
 if [ $1 != Create ]; then # run for Modified OR Vanilla, NOT Create
 	echo "Step $b: Make Recovery Partiion..."; let b++
 	sudo ${theTool} ensureRecoveryPartition / "${theOutput}" 0 0 "${workingDirectory}"/com.apple.recovery.boot/BaseSystem.chunklist
 	echo "Step $b: remove temp files..."
-	rm -rf "${theBS}".shadow
 	rm -rf "${theOutput}"
 else
 	return
