@@ -47,6 +47,7 @@ if [ ! -f "${theOutput}"  ]; then
 		done
 		echo "cp BaseSystem.dmg to com.apple.recovery.boot Local Folder"
 		cp /Volumes/"${theESD}"/BaseSystem.dmg "${workingDirectory}"/com.apple.recovery.boot/
+		chflags nohidden "${workingDirectory}"/com.apple.recovery.boot/BaseSystem.dmg
 		if [ -d /Volumes/"${theESD}"/System/Library/CoreServices/ ]; then
 			for prog in $theprogs; do
 				if [ -f $prog ]; then
@@ -214,7 +215,9 @@ function Exit(){
 function Create(){
 	[ -f "${theOutputESD}" ] && rm -rf "${theOutputESD}"
 	theOutput="${workingDirectory}"/Create/BaseSystem.dmg
-	makeRecovery $a
+	if [ ! -f "${theOutput}"  ]; then
+		makeRecovery $a
+	fi	
 	echo "Step $b: attach"
 	echo "Install OS X ${rootSystem}.app/Contents/SharedSupport/InstallESD.dmg with shadow"; let b++
 	hdiutil attach -nobrowse -owners on "${theInputESD}" -shadow "${theOutputESD}".shadow
@@ -223,10 +226,14 @@ function Create(){
 	done
 	echo "Step $b: cp Modified BaseSystem.dmg To Install ESD"; let b++
 	sudo cp -R "${theOutput}" /Volumes/"${theESD}"/
-	sudo hdiutil detach /Volumes/"${theESD}"
+	wait
+	hdiutil detach /Volumes/"${theESD}"
 	wait
 	echo "Step $b: Converting back to readonly..."; let b++
-	sudo hdiutil convert -format UDZO -o "${theOutputESD}" "${theInputESD}" -shadow "${theOutputESD}".shadow
+	hdiutil convert -format UDZO -o "${theOutputESD}" "${theInputESD}" -shadow "${theOutputESD}".shadow
+	wait
+	echo "Step $b: asr checksumming…"; let b++
+	asr -imagescan "${theOutput}"
 	wait
 	echo "Step $b: remove temp files..."
 	sudo rm -rf "${theOutputESD}".shadow
