@@ -1,6 +1,6 @@
 #!/bin/bash
 #STLVNUB
-verS="RecoveryTool V1.0"
+verS="RecoveryTool V1.1"
 workingDirectory="`dirname \"$0\"`"
 theBS="${workingDirectory}"/com.apple.recovery.boot/BaseSystem.dmg
 theTool="${workingDirectory}"/TOOLS/dmtest
@@ -28,7 +28,7 @@ case "${theSystem}" in
 esac
 theOutputESD="${workingDirectory}"/Create/Install_${rootSystem}_ESD.dmg
 theInputESD="/Applications/Install OS X ${rootSystem}.app/Contents/SharedSupport/InstallESD.dmg"
-[ ! -e /Applications/"Install OS X ${rootSystem}.app" ] && echo "Please download '${theESD} ${rootSystem}.app' from the App store" && exit 1
+[ ! -e /Applications/"Install OS X ${rootSystem}.app" ] && [ ! -f "${theBS}" ] && echo "Please download '${theESD} ${rootSystem}.app' from the App store" && exit 1
 [ "${rootSystem}" == unsupported ] && echo "For Lion-Mavericks Only!!" && exit 1
 [ ! -d "${workingDirectory}"/Create ] && mkdir -p "${workingDirectory}"/Create
 b=1
