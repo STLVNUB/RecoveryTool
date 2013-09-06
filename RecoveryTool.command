@@ -1,6 +1,6 @@
 #!/bin/bash
 #STLVNUB
-verS="RecoveryTool V1.1"
+verS="RecoveryTool V1.2"
 workingDirectory="`dirname \"$0\"`"
 theBS="${workingDirectory}"/com.apple.recovery.boot/BaseSystem.dmg
 theTool="${workingDirectory}"/TOOLS/dmtest
@@ -33,7 +33,7 @@ theInputESD="/Applications/Install OS X ${rootSystem}.app/Contents/SharedSupport
 [ ! -d "${workingDirectory}"/Create ] && mkdir -p "${workingDirectory}"/Create
 b=1
 function makeRecovery(){
-if [ ! -f "${theOutput}"  ]; then
+if [ ! -f "${theOutput}"  ]|| [ ! -e /Applications/"Install OS X ${rootSystem}.app" ]; then
 	if [ ! -f "${theBS}" ]; then
 		echo "Step 1: Making com.apple.recovery.boot Local Folder"
 		[ ! -d "${workingDirectory}"/com.apple.recovery.boot ] && mkdir "${workingDirectory}"/com.apple.recovery.boot
@@ -93,9 +93,11 @@ echo "Step $b: Copy preheat.sh, chmod and chown it..."; let b++
 sudo cp -R "${preheatDIR}"/preheat.sh /Volumes/"${theBaseSystem}"/System/Installation/CDIS/preheat.sh
 sudo chmod +x /Volumes/"${theBaseSystem}"/System/Installation/CDIS/preheat.sh
 sudo chown -R root:wheel /Volumes/"${theBaseSystem}"/System/Installation/CDIS/
-echo "Step $b: Copy Kexts,chown them, and detach..."; let b++
-sudo cp -R "${kextDIR}" /Volumes/"${theBaseSystem}"/ToolBox/
-sudo chown -R root:wheel /Volumes/"${theBaseSystem}"/Toolbox/
+if [ $a != Vanilla ]; then
+	echo "Step $b: Copy Kexts,chown them, and detach..."; let b++
+	sudo cp -R "${kextDIR}" /Volumes/"${theBaseSystem}"/ToolBox/
+	sudo chown -R root:wheel /Volumes/"${theBaseSystem}"/Toolbox/
+fi	
 echo "Detaching…"
 hdiutil detach /Volumes/"${theBaseSystem}"
 wait
@@ -244,14 +246,16 @@ function Create(){
 function menu(){
 	findRecovery
 	clear
+	choice3=""
 	if [ "${recoveryPart}" != "" ]; then
 		mess="The Following Recovery Partition has been found: ${recoveryPart}"
 		CHOICE2="Create Vanilla Modified Delete Exit"
 		choice3="* 'Delete'   Removes recovery partition from booted HD '${DEVBooted}'             *"
+	elif [ -f "${theBS}" ]; then
+		CHOICE2="Vanilla Modified Exit"
 	else
 		mess="No Recovery Found…"
 		CHOICE2="Create Vanilla Modified Exit"
-		choice3=""
 	fi	
 	echo -e "Running '${verS}' on '${rootSystem}' with disk '${DEVBooted}'"
 	echo "$mess"
